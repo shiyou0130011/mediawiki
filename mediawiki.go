@@ -262,7 +262,7 @@ func (m *MWApi) Download(filename string) (io.ReadCloser, error) {
 // versions of the API.
 //
 // Automatically retrieves an edit token if necessary.
-func (m *MWApi) Upload(dstFilename string, file io.Reader) error {
+func (m *MWApi) Upload(dstFilename string, file io.Reader, values ...map[string]string) error {
 	if m.edittoken == "" {
 		err := m.GetEditToken()
 		if err != nil {
@@ -270,12 +270,18 @@ func (m *MWApi) Upload(dstFilename string, file io.Reader) error {
 		}
 	}
 
-	query := map[string]string{
-		"action":   "upload",
-		"filename": dstFilename,
-		"token":    m.edittoken,
-		"format":   m.format,
+	query := map[string]string{}
+
+	for _, valuemap := range values {
+		for key, value := range valuemap {
+			query[key] = value
+		}
 	}
+
+	query["action"] = "upload"
+	query["filename"] = dstFilename
+	query["token"] = m.edittoken
+	query["format"] = m.format
 
 	buffer := &bytes.Buffer{}
 	writer := multipart.NewWriter(buffer)
